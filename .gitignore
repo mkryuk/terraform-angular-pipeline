@@ -1,0 +1,11 @@
+.vscode
+
+# Terraform
+.terraform/
+*.tfvars
+
+# Comment the following lines to versioning the state
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
+*.tfplan
