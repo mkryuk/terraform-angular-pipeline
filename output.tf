@@ -1,3 +1,3 @@
-output "website-cdn-endpoint" {
-  value = module.production.s3-cdn
+output "distribution_domain_name" {
+  value = module.app.distribution_domain_name
 }

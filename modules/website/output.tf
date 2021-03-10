@@ -1,3 +1,3 @@
-output "s3-cdn" {
-  value = aws_cloudfront_distribution.site_s3_distribution.domain_name
+output "distribution_domain_name" {
+  value = aws_cloudfront_distribution.app_distribution.domain_name
 }

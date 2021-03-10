@@ -1,20 +1,24 @@
 
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  comment = "origin-access-identity/cloudfront/${aws_s3_bucket.bucket_site.bucket_regional_domain_name}"
+  comment = "origin-access-identity/cloudfront/${aws_s3_bucket.app_build.bucket_regional_domain_name}"
 }
-resource "aws_cloudfront_distribution" "site_s3_distribution" {
+resource "aws_cloudfront_distribution" "app_distribution" {
 
-  depends_on          = [aws_s3_bucket.bucket_site, aws_cloudfront_origin_access_identity.origin_access_identity]
+  depends_on = [
+    aws_s3_bucket.app_build,
+    aws_s3_bucket.app_logs,
+    aws_cloudfront_origin_access_identity.origin_access_identity
+  ]
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
-  aliases             = var.domain_names
+  aliases             = [var.app_domain]
 
-  comment = "${var.app_name}-${var.git_repository_branch}-cdn"
+  comment = "${var.app_name}-${var.env}-cdn"
 
   origin {
-    domain_name = aws_s3_bucket.bucket_site.bucket_regional_domain_name
-    origin_id   = aws_s3_bucket.bucket_site.bucket
+    domain_name = aws_s3_bucket.app_build.bucket_regional_domain_name
+    origin_id   = aws_s3_bucket.app_build.bucket
 
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
@@ -25,7 +29,7 @@ resource "aws_cloudfront_distribution" "site_s3_distribution" {
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
-    target_origin_id       = aws_s3_bucket.bucket_site.bucket
+    target_origin_id       = aws_s3_bucket.app_build.bucket
     viewer_protocol_policy = "redirect-to-https"
     forwarded_values {
       headers                 = []
@@ -44,7 +48,7 @@ resource "aws_cloudfront_distribution" "site_s3_distribution" {
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
     cached_methods  = ["GET", "HEAD"]
 
-    target_origin_id = aws_s3_bucket.bucket_site.id
+    target_origin_id = aws_s3_bucket.app_build.id
 
     forwarded_values {
 
@@ -64,14 +68,13 @@ resource "aws_cloudfront_distribution" "site_s3_distribution" {
 
   }
 
-
   ordered_cache_behavior {
 
     path_pattern    = "*.css"
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
     cached_methods  = ["GET", "HEAD"]
 
-    target_origin_id = aws_s3_bucket.bucket_site.id
+    target_origin_id = aws_s3_bucket.app_build.id
 
     forwarded_values {
       query_string = true
@@ -94,7 +97,7 @@ resource "aws_cloudfront_distribution" "site_s3_distribution" {
     allowed_methods = ["GET", "HEAD", "OPTIONS"]
     cached_methods  = ["GET", "HEAD"]
 
-    target_origin_id = aws_s3_bucket.bucket_site.id
+    target_origin_id = aws_s3_bucket.app_build.id
 
     forwarded_values {
       query_string = true
@@ -120,7 +123,7 @@ resource "aws_cloudfront_distribution" "site_s3_distribution" {
   wait_for_deployment = true
 
   tags = {
-    Environment = "${var.app_name}-${var.git_repository_branch}"
+    Environment = "${var.app_name}-${var.env}"
   }
 
   custom_error_response {
@@ -138,8 +141,13 @@ resource "aws_cloudfront_distribution" "site_s3_distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
-    ssl_support_method             = "sni-only"
+    # cloudfront_default_certificate = true
+    acm_certificate_arn = data.aws_acm_certificate.wildcard_website.arn
+    ssl_support_method  = "sni-only"
   }
 
+  logging_config {
+    bucket = aws_s3_bucket.app_logs.bucket_domain_name
+    prefix = "${var.app_domain}/app_distribution/"
+  }
 }

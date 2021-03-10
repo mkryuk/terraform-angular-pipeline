@@ -1,35 +1,41 @@
-variable "app_name" {
-  type        = string
-  description = "Website project name"
-  default     = "app_name"
-}
-
-variable "env" {
-  description = "Depolyment environment"
-  default     = "dev"
-}
-
 variable "aws_region" {
   type        = string
   description = "AWS Region for the VPC"
   default     = "us-west-2"
 }
 
-variable "domain_names" {
-  type        = list(string)
-  default     = []
-  description = "The list of domain names associated to cloudfront"
+variable "app_name" {
+  type        = string
+  description = "Website project name"
+  default     = "app_name"
+}
+
+variable "dist_dir" {
+  type        = string
+  description = "Website distribution directory"
+  default     = "dist"
+}
+
+variable "env" {
+  type        = string
+  description = "Depolyment environment"
+  default     = "dev"
+}
+
+variable "app_domain" {
+  description = "Main app domain, e.g. somedomain.xyz"
+  type        = string
 }
 
 variable "git_repository_owner" {
   type        = string
-  description = "Github Repository Owner"
+  description = "Github repository owner name"
   default     = ""
 }
 
 variable "github_token" {
   type        = string
-  description = "Github Repository Owner"
+  description = "Github token"
   default     = ""
 }
 
@@ -45,8 +51,8 @@ variable "git_repository_branch" {
   default     = "master"
 }
 
-variable "git_repository_dev_branch" {
-  type        = string
-  description = "Github Project Branch"
-  default     = "develop"
+variable "manual_approve" {
+  type        = bool
+  description = "Toggle to enable or disable manual approve step in pipeline"
+  default     = false
 }

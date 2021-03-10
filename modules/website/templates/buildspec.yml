@@ -15,10 +15,10 @@ phases:
     commands:
       - npm run build
       # we could copy builded data here instead of the next Deploy step in codepipeline
-      # - aws s3 sync --delete ./dist/${app_name} s3://${bucket_name} --cache-control max-age=3600
+      # - aws s3 sync --delete ./${dist_dir} s3://${bucket_name} --cache-control max-age=3600
 
 artifacts:
   files:
     - "**/*"
   name: "web-dist-${env}"
-  base-directory: dist/${app_name}
+  base-directory: ${dist_dir}

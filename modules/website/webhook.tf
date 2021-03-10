@@ -1,5 +1,6 @@
+# This is an example of webhook
 # provider "github" {
-#   token        = var.github_token
+#   token = var.github_token
 # }
 
 # resource "aws_codepipeline_webhook" "codepipeline_webhook" {

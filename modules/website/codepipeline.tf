@@ -1,11 +1,11 @@
 resource "aws_codepipeline" "app_pipeline" {
-  name     = "${var.app_name}-${var.git_repository_branch}-pipeline"
+  name     = "${var.app_name}-${var.env}-pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
 
-  depends_on = [aws_s3_bucket.bucket_site, aws_s3_bucket.source]
+  depends_on = [aws_s3_bucket.app_build, aws_s3_bucket.app_source]
 
   artifact_store {
-    location = aws_s3_bucket.source.bucket
+    location = aws_s3_bucket.app_source.bucket
     type     = "S3"
   }
 
@@ -51,7 +51,21 @@ resource "aws_codepipeline" "app_pipeline" {
             },
           ]
         )
-        ProjectName = "${var.app_name}-${var.git_repository_branch}-codebuild"
+        ProjectName = aws_codebuild_project.app_codebuild.name
+      }
+    }
+  }
+
+  dynamic "stage" {
+    for_each = var.manual_approve ? [1] : []
+    content {
+      name = "Approve"
+      action {
+        name     = "Approval"
+        category = "Approval"
+        owner    = "AWS"
+        provider = "Manual"
+        version  = "1"
       }
     }
   }
@@ -62,7 +76,7 @@ resource "aws_codepipeline" "app_pipeline" {
     action {
       category = "Deploy"
       configuration = {
-        "BucketName" = aws_s3_bucket.bucket_site.bucket
+        "BucketName" = aws_s3_bucket.app_build.bucket
         "Extract"    = "true"
       }
       input_artifacts = [
@@ -99,7 +113,7 @@ resource "aws_codepipeline" "app_pipeline" {
             },
           ]
         )
-        ProjectName = "${var.app_name}-${var.git_repository_branch}-cloudfront_invalidation"
+        ProjectName = aws_codebuild_project.cloudfront_invalidation.name
       }
     }
   }
